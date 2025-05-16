@@ -1,471 +1,780 @@
+// providers/auth_provider.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../firebase/auth_methods.dart';
+import '../firebase/firestore_methods.dart';
+import '../firebase/storage_methods.dart';
+import '../models/user_model.dart';
+import '../utils/toast_util.dart';
 
-class UserModel {
-  final String uid;
-  final String email;
-  final String firstName;
-  final String lastName;
-  final String userType; // 'provider' or 'seeker'
-  final Timestamp createdAt;
-  final String? profileImageUrl;
+class AuthProvider with ChangeNotifier {
+  // Firebase instances
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreMethods _firestoreMethods = FirestoreMethods();
+  final StorageMethods _storageMethods = StorageMethods();
   
-  // Shared properties for both user types
-  final String? phoneNumber;
-  final bool isActive;
-  final Timestamp? lastActive;
-  final Map<String, dynamic>? preferences;
-  final List<String>? favoriteServices;
-  final List<String>? favoriteProviders;
-  final String? fcmToken; // For push notifications
-  final String? language; // User's preferred language
+  // User data
+  UserModel? _user;
+  bool _isLoading = false;
+  String? _error;
   
-  // Provider-specific properties
-  final String? category;
-  final String? icImageUrl;
-  final String? resumeUrl;
-  final bool? isVerified;
-  final bool? availableForWork;
-  final double? rating;
-  final int? totalServices;
-  final int? totalBookings;
-  final int? completedBookings;
-  final String? bio;
-  final List<String>? skills;
-  final Map<String, dynamic>? availability;
-  final Map<String, dynamic>? bankDetails;
-  final bool? offerEmergencyServices;
-  final Map<String, dynamic>? serviceLocations;
+  // Auth state
+  bool _isLoggedIn = false;
+  String _userType = ''; // 'provider' or 'seeker'
   
-  // Seeker-specific properties
-  final List<String>? recentSearches;
-  final List<String>? savedAddresses;
-  final List<Map<String, dynamic>>? paymentMethods;
-  final int? totalSpent;
-  final Map<String, dynamic>? notificationSettings;
+  // Getters
+  UserModel? get user => _user;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isLoggedIn => _isLoggedIn;
+  String get userType => _userType;
+  bool get isProvider => _userType == 'provider';
+  bool get isSeeker => _userType == 'seeker';
+  String get userId => _auth.currentUser?.uid ?? '';
   
-  UserModel({
-    required this.uid,
-    required this.email,
-    required this.firstName,
-    required this.lastName,
-    required this.userType,
-    required this.createdAt,
-    this.profileImageUrl,
-    this.phoneNumber,
-    this.isActive = true,
-    this.lastActive,
-    this.preferences,
-    this.favoriteServices,
-    this.favoriteProviders,
-    this.fcmToken,
-    this.language,
-    
-    // Provider-specific
-    this.category,
-    this.icImageUrl,
-    this.resumeUrl,
-    this.isVerified,
-    this.availableForWork,
-    this.rating,
-    this.totalServices,
-    this.totalBookings,
-    this.completedBookings,
-    this.bio,
-    this.skills,
-    this.availability,
-    this.bankDetails,
-    this.offerEmergencyServices,
-    this.serviceLocations,
-    
-    // Seeker-specific
-    this.recentSearches,
-    this.savedAddresses,
-    this.paymentMethods,
-    this.totalSpent,
-    this.notificationSettings,
-  });
-
-  // Create a user model from a Firestore document snapshot
-  factory UserModel.fromSnap(DocumentSnapshot snap) {
-    Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
-    
-    return UserModel(
-      uid: data['uid'] ?? '',
-      email: data['email'] ?? '',
-      firstName: data['firstName'] ?? '',
-      lastName: data['lastName'] ?? '',
-      userType: data['userType'] ?? 'seeker',
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      profileImageUrl: data['profileImageUrl'],
-      phoneNumber: data['phoneNumber'],
-      isActive: data['isActive'] ?? true,
-      lastActive: data['lastActive'],
-      preferences: data['preferences'],
-      favoriteServices: data['favoriteServices'] != null 
-          ? List<String>.from(data['favoriteServices']) 
-          : null,
-      favoriteProviders: data['favoriteProviders'] != null 
-          ? List<String>.from(data['favoriteProviders']) 
-          : null,
-      fcmToken: data['fcmToken'],
-      language: data['language'],
-      
-      // Provider-specific
-      category: data['category'],
-      icImageUrl: data['icImageUrl'],
-      resumeUrl: data['resumeUrl'],
-      isVerified: data['isVerified'],
-      availableForWork: data['availableForWork'],
-      rating: data['rating'] != null ? (data['rating'] as num).toDouble() : null,
-      totalServices: data['totalServices'],
-      totalBookings: data['totalBookings'],
-      completedBookings: data['completedBookings'],
-      bio: data['bio'],
-      skills: data['skills'] != null 
-          ? List<String>.from(data['skills']) 
-          : null,
-      availability: data['availability'],
-      bankDetails: data['bankDetails'],
-      offerEmergencyServices: data['offerEmergencyServices'],
-      serviceLocations: data['serviceLocations'],
-      
-      // Seeker-specific
-      recentSearches: data['recentSearches'] != null 
-          ? List<String>.from(data['recentSearches']) 
-          : null,
-      savedAddresses: data['savedAddresses'] != null 
-          ? List<String>.from(data['savedAddresses']) 
-          : null,
-      paymentMethods: data['paymentMethods'] != null 
-          ? List<Map<String, dynamic>>.from(data['paymentMethods']) 
-          : null,
-      totalSpent: data['totalSpent'],
-      notificationSettings: data['notificationSettings'],
-    );
+  // Constructor - Initialize auth state
+  AuthProvider() {
+    _initAuthState();
   }
-
-  // Convert to a map that can be stored in Firestore
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> data = {
-      'uid': uid,
-      'email': email,
-      'firstName': firstName,
-      'lastName': lastName,
-      'userType': userType,
-      'createdAt': createdAt,
-      'profileImageUrl': profileImageUrl,
-      'phoneNumber': phoneNumber,
-      'isActive': isActive,
-      'lastActive': lastActive,
-      'preferences': preferences,
-      'favoriteServices': favoriteServices,
-      'favoriteProviders': favoriteProviders,
-      'fcmToken': fcmToken,
-      'language': language,
-    };
-    
-    // Add provider-specific fields if user is a provider
-    if (userType == 'provider') {
-      data.addAll({
-        'category': category,
-        'icImageUrl': icImageUrl,
-        'resumeUrl': resumeUrl,
-        'isVerified': isVerified,
-        'availableForWork': availableForWork,
-        'rating': rating,
-        'totalServices': totalServices,
-        'totalBookings': totalBookings,
-        'completedBookings': completedBookings,
-        'bio': bio,
-        'skills': skills,
-        'availability': availability,
-        'bankDetails': bankDetails,
-        'offerEmergencyServices': offerEmergencyServices,
-        'serviceLocations': serviceLocations,
-      });
-    }
-    
-    // Add seeker-specific fields if user is a seeker
-    if (userType == 'seeker') {
-      data.addAll({
-        'recentSearches': recentSearches,
-        'savedAddresses': savedAddresses,
-        'paymentMethods': paymentMethods,
-        'totalSpent': totalSpent,
-        'notificationSettings': notificationSettings,
-      });
-    }
-    
-    return data;
-  }
-
-  // Create a copy of the user with updated fields
-  UserModel copyWith({
-    String? uid,
-    String? email,
-    String? firstName,
-    String? lastName,
-    String? userType,
-    Timestamp? createdAt,
-    String? profileImageUrl,
-    String? phoneNumber,
-    bool? isActive,
-    Timestamp? lastActive,
-    Map<String, dynamic>? preferences,
-    List<String>? favoriteServices,
-    List<String>? favoriteProviders,
-    String? fcmToken,
-    String? language,
-    
-    // Provider-specific
-    String? category,
-    String? icImageUrl,
-    String? resumeUrl,
-    bool? isVerified,
-    bool? availableForWork,
-    double? rating,
-    int? totalServices,
-    int? totalBookings,
-    int? completedBookings,
-    String? bio,
-    List<String>? skills,
-    Map<String, dynamic>? availability,
-    Map<String, dynamic>? bankDetails,
-    bool? offerEmergencyServices,
-    Map<String, dynamic>? serviceLocations,
-    
-    // Seeker-specific
-    List<String>? recentSearches,
-    List<String>? savedAddresses,
-    List<Map<String, dynamic>>? paymentMethods,
-    int? totalSpent,
-    Map<String, dynamic>? notificationSettings,
-  }) {
-    return UserModel(
-      uid: uid ?? this.uid,
-      email: email ?? this.email,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      userType: userType ?? this.userType,
-      createdAt: createdAt ?? this.createdAt,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      isActive: isActive ?? this.isActive,
-      lastActive: lastActive ?? this.lastActive,
-      preferences: preferences ?? this.preferences,
-      favoriteServices: favoriteServices ?? this.favoriteServices,
-      favoriteProviders: favoriteProviders ?? this.favoriteProviders,
-      fcmToken: fcmToken ?? this.fcmToken,
-      language: language ?? this.language,
-      
-      // Provider-specific
-      category: category ?? this.category,
-      icImageUrl: icImageUrl ?? this.icImageUrl,
-      resumeUrl: resumeUrl ?? this.resumeUrl,
-      isVerified: isVerified ?? this.isVerified,
-      availableForWork: availableForWork ?? this.availableForWork,
-      rating: rating ?? this.rating,
-      totalServices: totalServices ?? this.totalServices,
-      totalBookings: totalBookings ?? this.totalBookings,
-      completedBookings: completedBookings ?? this.completedBookings,
-      bio: bio ?? this.bio,
-      skills: skills ?? this.skills,
-      availability: availability ?? this.availability,
-      bankDetails: bankDetails ?? this.bankDetails,
-      offerEmergencyServices: offerEmergencyServices ?? this.offerEmergencyServices,
-      serviceLocations: serviceLocations ?? this.serviceLocations,
-      
-      // Seeker-specific
-      recentSearches: recentSearches ?? this.recentSearches,
-      savedAddresses: savedAddresses ?? this.savedAddresses,
-      paymentMethods: paymentMethods ?? this.paymentMethods,
-      totalSpent: totalSpent ?? this.totalSpent,
-      notificationSettings: notificationSettings ?? this.notificationSettings,
-    );
-  }
-
-  // Helper methods
   
-  // Get user's full name
-  String get fullName => '$firstName $lastName';
-  
-  // Check if user is a provider
-  bool get isProvider => userType == 'provider';
-  
-  // Check if user is a seeker
-  bool get isSeeker => userType == 'seeker';
-  
-  // Check if provider is available (verified and available for work)
-  bool get isAvailableProvider => 
-      isProvider && 
-      (isVerified ?? false) && 
-      (availableForWork ?? false);
-  
-  // Get avatar image (with fallback to initials-based avatar)
-  String getAvatarImage() {
-    if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
-      return profileImageUrl!;
-    }
+  // Initialize authentication state
+  Future<void> _initAuthState() async {
+    _setLoading(true);
     
-    // Return default avatar based on user type
-    if (isProvider) {
-      return 'assets/images/default_provider_avatar.png';
+    // Check if user is logged in
+    User? currentUser = _auth.currentUser;
+    
+    if (currentUser != null) {
+      // Get user data from Firestore
+      try {
+        DocumentSnapshot userDoc = await _firestore
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        
+        if (userDoc.exists) {
+          // User exists in Firestore
+          _user = UserModel.fromSnap(userDoc);
+          _userType = _user!.userType;
+          _isLoggedIn = true;
+          
+          // Update last active timestamp
+          await _firestore.collection('users').doc(currentUser.uid).update({
+            'lastActive': Timestamp.now(),
+            'isActive': true,
+          });
+          
+          // Store user type in shared preferences
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('userType', _userType);
+        } else {
+          // User exists in Auth but not in Firestore
+          await _auth.signOut();
+          _isLoggedIn = false;
+          _user = null;
+          _userType = '';
+        }
+      } catch (e) {
+        _error = e.toString();
+        _isLoggedIn = false;
+        _user = null;
+        _userType = '';
+      }
     } else {
-      return 'assets/images/default_seeker_avatar.png';
-    }
-  }
-  
-  // Get user initials for avatar
-  String get initials {
-    String firstInitial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
-    String lastInitial = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
-    return '$firstInitial$lastInitial';
-  }
-  
-  // Get user activity status
-  String get activityStatus {
-    if (!isActive) return 'Inactive';
-    
-    if (lastActive != null) {
-      final now = DateTime.now();
-      final lastActiveTime = lastActive!.toDate();
-      final difference = now.difference(lastActiveTime);
+      // No user is logged in
+      _isLoggedIn = false;
+      _user = null;
       
-      if (difference.inMinutes < 5) {
-        return 'Online';
-      } else if (difference.inHours < 1) {
-        return 'Last seen ${difference.inMinutes} min ago';
-      } else if (difference.inDays < 1) {
-        return 'Last seen ${difference.inHours} hr ago';
-      } else {
-        return 'Last seen ${difference.inDays} days ago';
+      // Try to get user type from shared preferences (for login screen routing)
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        _userType = prefs.getString('userType') ?? '';
+      } catch (e) {
+        _userType = '';
       }
     }
     
-    return 'Online';
+    _setLoading(false);
   }
   
-  // Check if user has a complete profile
-  bool get hasCompleteProfile {
-    if (isProvider) {
-      return firstName.isNotEmpty && 
-          lastName.isNotEmpty && 
-          (category ?? '').isNotEmpty &&
-          (bio ?? '').isNotEmpty;
-    } else {
-      return firstName.isNotEmpty && 
-          lastName.isNotEmpty && 
-          (phoneNumber ?? '').isNotEmpty;
-    }
+  // Set loading state
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
   }
   
-  // Get formatted date when user joined
-  String get joinedDate {
-    final date = createdAt.toDate();
-    return '${date.day}/${date.month}/${date.year}';
+  // Set error state
+  void _setError(String? error) {
+    _error = error;
+    notifyListeners();
   }
   
-  // Format provider rating (with fallback)
-  String get formattedRating {
-    if (rating == null) return 'New';
-    return rating!.toStringAsFixed(1);
+  // Clear error state
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
   
-  // Provider verification status
-  String get verificationStatus {
-    if (!isProvider) return '';
+  // Login user
+  Future<bool> login({
+    required String email,
+    required String password,
+    required String userType,
+  }) async {
+    _setLoading(true);
+    _setError(null);
     
-    if (isVerified == null) return 'Pending';
-    return isVerified! ? 'Verified' : 'Unverified';
-  }
-  
-  // Provider success rate
-  String get successRate {
-    if (!isProvider) return '';
-    
-    if (totalBookings == null || 
-        completedBookings == null || 
-        totalBookings == 0) {
-      return 'New';
-    }
-    
-    final rate = (completedBookings! / totalBookings!) * 100;
-    return '${rate.toStringAsFixed(0)}%';
-  }
-  
-  // Provider experience level based on completed bookings
-  String get experienceLevel {
-    if (!isProvider) return '';
-    
-    if (completedBookings == null) return 'New';
-    
-    if (completedBookings! >= 100) {
-      return 'Expert';
-    } else if (completedBookings! >= 50) {
-      return 'Advanced';
-    } else if (completedBookings! >= 20) {
-      return 'Intermediate';
-    } else if (completedBookings! >= 5) {
-      return 'Beginner';
-    } else {
-      return 'New';
-    }
-  }
-  
-  // Check if user is new (joined less than 7 days ago)
-  bool get isNew {
-    final now = DateTime.now();
-    final joined = createdAt.toDate();
-    return now.difference(joined).inDays < 7;
-  }
-  
-  // Check if user has a verified phone number
-  bool get hasVerifiedPhone => phoneNumber != null && phoneNumber!.isNotEmpty;
-  
-  // Check if provider offers emergency services
-  bool get offersEmergency => 
-      isProvider && 
-      (offerEmergencyServices ?? false);
-  
-  // Get formatted category name with proper capitalization
-  String get formattedCategory {
-    if (!isProvider || category == null || category!.isEmpty) return '';
-    
-    // Handle multi-word categories
-    if (category!.contains('_')) {
-      return category!
-          .split('_')
-          .map((word) => word.substring(0, 1).toUpperCase() + word.substring(1))
-          .join(' ');
-    }
-    
-    // Single word category
-    return category!.substring(0, 1).toUpperCase() + category!.substring(1);
-  }
-  
-  // Check if user has any saved addresses
-  bool get hasSavedAddresses => 
-      isSeeker && 
-      savedAddresses != null && 
-      savedAddresses!.isNotEmpty;
-  
-  // Check if user has any saved payment methods
-  bool get hasSavedPaymentMethods => 
-      isSeeker && 
-      paymentMethods != null && 
-      paymentMethods!.isNotEmpty;
-  
-  // Check if user has favorites
-  bool get hasFavorites => 
-      (favoriteServices != null && favoriteServices!.isNotEmpty) ||
-      (favoriteProviders != null && favoriteProviders!.isNotEmpty);
+    try {
+      // Attempt to sign in with Firebase Auth
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       
-  // Check if current language is English (default)
-  bool get isEnglish => language == null || language == 'en';
+      if (userCredential.user != null) {
+        // Get user data from Firestore
+        DocumentSnapshot userDoc = await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+        
+        if (userDoc.exists) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          
+          // Check if user type matches
+          if (userData['userType'] != userType) {
+            await _auth.signOut();
+            _setError(userType == 'provider' 
+                ? 'This account is not registered as a service provider'
+                : 'This account is not registered as a service seeker');
+            _setLoading(false);
+            return false;
+          }
+          
+          // User exists and type matches
+          _user = UserModel.fromSnap(userDoc);
+          _userType = _user!.userType;
+          _isLoggedIn = true;
+          
+          // Update last active timestamp
+          await _firestore.collection('users').doc(userCredential.user!.uid).update({
+            'lastActive': Timestamp.now(),
+            'isActive': true,
+            'lastLogin': Timestamp.now(),
+          });
+          
+          // Store user type in shared preferences
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('userType', _userType);
+          
+          _setLoading(false);
+          ToastUtils.showLoginSuccessToast();
+          return true;
+        } else {
+          // User exists in Auth but not in Firestore
+          await _auth.signOut();
+          _setError('User account not found');
+          _setLoading(false);
+          return false;
+        }
+      } else {
+        _setError('Login failed');
+        _setLoading(false);
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found with this email';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Incorrect password';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'user-disabled':
+          errorMessage = 'User account has been disabled';
+          break;
+        case 'too-many-requests':
+          errorMessage = 'Too many login attempts. Please try again later';
+          break;
+        default:
+          errorMessage = 'Authentication failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
   
-  // Check if provider has skills
-  bool get hasSkills => 
-      isProvider && 
-      skills != null && 
-      skills!.isNotEmpty;
+  // Sign up as service seeker
+  Future<bool> signUpSeeker({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    String? phoneNumber,
+    File? profileImage,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      // Create user with Firebase Auth
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      if (userCredential.user != null) {
+        String uid = userCredential.user!.uid;
+        
+        // Upload profile image if provided
+        String? profileImageUrl;
+        if (profileImage != null) {
+          profileImageUrl = await _storageMethods.uploadProfileImage(profileImage);
+        }
+        
+        // Create user data
+        UserModel userData = UserModel(
+          uid: uid,
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+          userType: 'seeker',
+          createdAt: Timestamp.now(),
+          phoneNumber: phoneNumber,
+          profileImageUrl: profileImageUrl,
+        );
+        
+        // Store user data in Firestore
+        await _firestore.collection('users').doc(uid).set(userData.toJson());
+        
+        // Set user data in provider
+        _user = userData;
+        _userType = 'seeker';
+        _isLoggedIn = true;
+        
+        // Store user type in shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('userType', 'seeker');
+        
+        _setLoading(false);
+        ToastUtils.showSignUpSuccessToast();
+        return true;
+      } else {
+        _setError('Signup failed');
+        _setLoading(false);
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'This email is already registered';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'weak-password':
+          errorMessage = 'Password is too weak';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled';
+          break;
+        default:
+          errorMessage = 'Signup failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Sign up as service provider
+  Future<bool> signUpProvider({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String category,
+    required File icImage,
+    required File resumeFile,
+    File? profileImage,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      // Create user with Firebase Auth
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      if (userCredential.user != null) {
+        String uid = userCredential.user!.uid;
+        
+        // Upload profile image if provided
+        String? profileImageUrl;
+        if (profileImage != null) {
+          profileImageUrl = await _storageMethods.uploadProfileImage(profileImage);
+        }
+        
+        // Upload IC image
+        String icImageUrl = await _storageMethods.uploadProviderIC(icImage);
+        
+        // Upload resume
+        String resumeUrl = await _storageMethods.uploadProviderResume(resumeFile);
+        
+        // Create user data
+        UserModel userData = UserModel(
+          uid: uid,
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+          userType: 'provider',
+          createdAt: Timestamp.now(),
+          profileImageUrl: profileImageUrl,
+          category: category,
+          icImageUrl: icImageUrl,
+          resumeUrl: resumeUrl,
+          isVerified: false, // Pending verification by admin
+          availableForWork: true,
+          rating: 0,
+        );
+        
+        // Store user data in Firestore
+        await _firestore.collection('users').doc(uid).set(userData.toJson());
+        
+        // Set user data in provider
+        _user = userData;
+        _userType = 'provider';
+        _isLoggedIn = true;
+        
+        // Store user type in shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('userType', 'provider');
+        
+        _setLoading(false);
+        ToastUtils.showSignUpSuccessToast();
+        return true;
+      } else {
+        _setError('Signup failed');
+        _setLoading(false);
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'This email is already registered';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'weak-password':
+          errorMessage = 'Password is too weak';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled';
+          break;
+        default:
+          errorMessage = 'Signup failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Logout user
+  Future<bool> logout() async {
+    _setLoading(true);
+    
+    try {
+      // Update user as inactive
+      if (_user != null) {
+        await _firestore.collection('users').doc(_user!.uid).update({
+          'isActive': false,
+          'lastActive': Timestamp.now(),
+        });
+      }
+      
+      // Sign out from Firebase Auth
+      await _auth.signOut();
+      
+      // Reset provider state
+      _user = null;
+      _isLoggedIn = false;
+      // Don't reset userType to remember the user type for next login
+      
+      _setLoading(false);
+      ToastUtils.showLogoutSuccessToast();
+      return true;
+    } catch (e) {
+      _setError('Logout failed: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Reset password
+  Future<bool> resetPassword(String email) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      
+      _setLoading(false);
+      ToastUtils.showPasswordResetToast();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No user found with this email';
+          break;
+        default:
+          errorMessage = 'Password reset failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Change password
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      // Re-authenticate user
+      User? currentUser = _auth.currentUser;
+      
+      if (currentUser == null || currentUser.email == null) {
+        _setError('User not found');
+        _setLoading(false);
+        return false;
+      }
+      
+      // Create credential
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: currentPassword,
+      );
+      
+      // Re-authenticate
+      await currentUser.reauthenticateWithCredential(credential);
+      
+      // Change password
+      await currentUser.updatePassword(newPassword);
+      
+      _setLoading(false);
+      ToastUtils.showPasswordChangedToast();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'wrong-password':
+          errorMessage = 'Current password is incorrect';
+          break;
+        case 'weak-password':
+          errorMessage = 'New password is too weak';
+          break;
+        case 'requires-recent-login':
+          errorMessage = 'Please login again before changing your password';
+          break;
+        default:
+          errorMessage = 'Password change failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Update profile
+  Future<bool> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? bio,
+    File? profileImage,
+    List<String>? skills,
+    String? category,
+    bool? availableForWork,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      // Check if user is logged in
+      if (_user == null) {
+        _setError('User not logged in');
+        _setLoading(false);
+        return false;
+      }
+      
+      Map<String, dynamic> updateData = {};
+      
+      // Update fields if provided
+      if (firstName != null) updateData['firstName'] = firstName;
+      if (lastName != null) updateData['lastName'] = lastName;
+      if (phoneNumber != null) updateData['phoneNumber'] = phoneNumber;
+      if (bio != null) updateData['bio'] = bio;
+      if (skills != null) updateData['skills'] = skills;
+      if (category != null) updateData['category'] = category;
+      if (availableForWork != null) updateData['availableForWork'] = availableForWork;
+      
+      // Upload profile image if provided
+      if (profileImage != null) {
+        String profileImageUrl = await _storageMethods.uploadProfileImage(profileImage);
+        updateData['profileImageUrl'] = profileImageUrl;
+      }
+      
+      // Update user document
+      await _firestore.collection('users').doc(_user!.uid).update(updateData);
+      
+      // Update user object
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(_user!.uid)
+          .get();
+      
+      _user = UserModel.fromSnap(userDoc);
+      
+      _setLoading(false);
+      ToastUtils.showProfileUpdatedToast();
+      return true;
+    } catch (e) {
+      _setError('Profile update failed: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Delete user account
+  Future<bool> deleteAccount(String password) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      // Re-authenticate user
+      User? currentUser = _auth.currentUser;
+      
+      if (currentUser == null || currentUser.email == null) {
+        _setError('User not found');
+        _setLoading(false);
+        return false;
+      }
+      
+      // Create credential
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: password,
+      );
+      
+      // Re-authenticate
+      await currentUser.reauthenticateWithCredential(credential);
+      
+      // Delete user data from Firestore
+      if (_user != null) {
+        // Delete user's profile image
+        if (_user!.profileImageUrl != null && _user!.profileImageUrl!.isNotEmpty) {
+          await _storageMethods.deleteFile(_user!.profileImageUrl!);
+        }
+        
+        // If provider, delete IC and resume files and services
+        if (_user!.isProvider) {
+          // Delete IC and resume files
+          if (_user!.icImageUrl != null) {
+            await _storageMethods.deleteFile(_user!.icImageUrl!);
+          }
+          if (_user!.resumeUrl != null) {
+            await _storageMethods.deleteFile(_user!.resumeUrl!);
+          }
+          
+          // Delete services
+          QuerySnapshot servicesSnapshot = await _firestore
+              .collection('services')
+              .where('providerId', isEqualTo: _user!.uid)
+              .get();
+              
+          for (var doc in servicesSnapshot.docs) {
+            await _firestore.collection('services').doc(doc.id).delete();
+          }
+        }
+        
+        // Delete user document
+        await _firestore.collection('users').doc(_user!.uid).delete();
+      }
+      
+      // Delete user from Firebase Auth
+      await currentUser.delete();
+      
+      // Reset provider state
+      _user = null;
+      _isLoggedIn = false;
+      _userType = '';
+      
+      // Clear shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('userType');
+      
+      _setLoading(false);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      
+      switch (e.code) {
+        case 'wrong-password':
+          errorMessage = 'Password is incorrect';
+          break;
+        case 'requires-recent-login':
+          errorMessage = 'Please login again before deleting your account';
+          break;
+        default:
+          errorMessage = 'Account deletion failed: ${e.message}';
+          break;
+      }
+      
+      _setError(errorMessage);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An error occurred: ${e.toString()}');
+      _setLoading(false);
+      return false;
+    }
+  }
+  
+  // Refresh user data
+  Future<void> refreshUserData() async {
+    if (!_isLoggedIn || _user == null) return;
+    
+    _setLoading(true);
+    
+    try {
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(_user!.uid)
+          .get();
+          
+      if (userDoc.exists) {
+        _user = UserModel.fromSnap(userDoc);
+        
+        // Update last active timestamp
+        await _firestore.collection('users').doc(_user!.uid).update({
+          'lastActive': Timestamp.now(),
+        });
+      }
+    } catch (e) {
+      _setError('Failed to refresh user data: ${e.toString()}');
+    }
+    
+    _setLoading(false);
+  }
+  
+  // Check if email exists
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      final methods = await _auth.fetchSignInMethodsForEmail(email);
+      return methods.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Get user by ID
+  Future<UserModel?> getUserById(String userId) async {
+    try {
+      return await _firestoreMethods.getUserById(userId);
+    } catch (e) {
+      _setError('Failed to get user: ${e.toString()}');
+      return null;
+    }
+  }
+  
+  // Update FCM token for push notifications
+  Future<void> updateFcmToken(String token) async {
+    if (!_isLoggedIn || _user == null) return;
+    
+    try {
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'fcmToken': token,
+      });
+    } catch (e) {
+      print('Failed to update FCM token: ${e.toString()}');
+    }
+  }
+  
+  // Change language preference
+  Future<bool> changeLanguage(String languageCode) async {
+    if (!_isLoggedIn || _user == null) return false;
+    
+    try {
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'language': languageCode,
+      });
+      
+      // Update local user object
+      _user = _user!.copyWith(language: languageCode);
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _setError('Failed to change language: ${e.toString()}');
+      return false;
+    }
+  }
 }

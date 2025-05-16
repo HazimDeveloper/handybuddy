@@ -1,3 +1,4 @@
+// providers/booking_provider.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,8 +43,8 @@ class BookingProvider with ChangeNotifier {
   // Booking creation data
   ServiceModel? _selectedService;
   UserModel? _selectedProvider;
-  DateTime _scheduledDate = DateTime.now().add(Duration(days: 1));
-  TimeOfDay _scheduledTime = TimeOfDay(hour: 10, minute: 0);
+  DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay _scheduledTime = const TimeOfDay(hour: 10, minute: 0);
   String _address = '';
   String _contactNumber = '';
   String _paymentMethod = 'cod';
@@ -273,10 +274,10 @@ class BookingProvider with ChangeNotifier {
         if (_dateFilter == BookingFilter.today) {
           return bookingDateOnly.isAtSameMomentAs(today);
         } else if (_dateFilter == BookingFilter.thisWeek) {
-          return bookingDateOnly.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
-              bookingDateOnly.isBefore(startOfWeek.add(Duration(days: 7)));
+          return bookingDateOnly.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+              bookingDateOnly.isBefore(startOfWeek.add(const Duration(days: 7)));
         } else if (_dateFilter == BookingFilter.thisMonth) {
-          return bookingDateOnly.isAfter(startOfMonth.subtract(Duration(days: 1))) &&
+          return bookingDateOnly.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
               bookingDateOnly.month == now.month &&
               bookingDateOnly.year == now.year;
         }
@@ -347,8 +348,8 @@ class BookingProvider with ChangeNotifier {
   void resetBookingForm() {
     _selectedService = null;
     _selectedProvider = null;
-    _scheduledDate = DateTime.now().add(Duration(days: 1));
-    _scheduledTime = TimeOfDay(hour: 10, minute: 0);
+    _scheduledDate = DateTime.now().add(const Duration(days: 1));
+    _scheduledTime = const TimeOfDay(hour: 10, minute: 0);
     _address = '';
     _contactNumber = '';
     _paymentMethod = 'cod';

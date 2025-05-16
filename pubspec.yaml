@@ -35,10 +35,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_image_compress: ^2.4.0
+  flutter_localization: ^0.3.2
   fluttertoast: ^8.2.12
   image_picker: ^1.1.2
+  intl: ^0.19.0
   path_provider: ^2.1.5
   provider: ^6.1.5
+  shared_preferences: ^2.5.3
   uuid: ^4.5.1
 
 dev_dependencies:
