@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "712509417680",
+    "project_id": "handybuddy-518c6",
+    "storage_bucket": "handybuddy-518c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:712509417680:android:6ebde7dd0113b3d84596d5",
+        "android_client_info": {
+          "package_name": "com.example.handy_buddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAK5fnMO1Ie3ziUv9s_YTKOLV6HmBz9bt0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

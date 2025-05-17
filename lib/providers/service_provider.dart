@@ -72,6 +72,8 @@ class ServiceProvider with ChangeNotifier {
   String get providerSearchQuery => _providerSearchQuery;
   double get minRating => _minRating;
   bool get verifiedOnly => _verifiedOnly;
+
+  List<ServiceModel>? get providerServices => null;
   
   // Update user
   void update(UserModel? user) {
@@ -86,7 +88,7 @@ class ServiceProvider with ChangeNotifier {
     required String description,
     required String category,
     required double price,
-    required File serviceImage,
+    File? serviceImage,
     List<String>? tags,
     int? estimatedDuration,
     String? durationType,
@@ -107,7 +109,7 @@ class ServiceProvider with ChangeNotifier {
       String serviceId = _firestore.collection('services').doc().id;
       
       // Upload service image
-      String imageUrl = await _storageMethods.uploadServiceImage(serviceImage, serviceId);
+      String imageUrl = await _storageMethods.uploadServiceImage(serviceImage!, serviceId);
       
       // Create service model
       ServiceModel service = ServiceModel(

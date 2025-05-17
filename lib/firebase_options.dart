@@ -37,40 +37,40 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'handy-buddy-app',
-    authDomain: 'handy-buddy-app.firebaseapp.com',
-    storageBucket: 'handy-buddy-app.appspot.com',
-    measurementId: 'YOUR_MEASUREMENT_ID',
+    apiKey: 'AIzaSyAK5fnMO1Ie3ziUv9s_YTKOLV6HmBz9bt0',
+    appId: '1:712509417680:web:YOUR_WEB_APP_ID',
+    messagingSenderId: '712509417680',
+    projectId: 'handybuddy-518c6',
+    authDomain: 'handybuddy-518c6.firebaseapp.com',
+    storageBucket: 'handybuddy-518c6.firebasestorage.app',
+    measurementId: 'YOUR_MEASUREMENT_ID', // This isn't in your JSON file
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'handy-buddy-app',
-    storageBucket: 'handy-buddy-app.appspot.com',
+    apiKey: 'AIzaSyAK5fnMO1Ie3ziUv9s_YTKOLV6HmBz9bt0',
+    appId: '1:712509417680:android:6ebde7dd0113b3d84596d5',
+    messagingSenderId: '712509417680',
+    projectId: 'handybuddy-518c6',
+    storageBucket: 'handybuddy-518c6.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'handy-buddy-app',
-    storageBucket: 'handy-buddy-app.appspot.com',
-    iosClientId: 'YOUR_IOS_CLIENT_ID',
-    iosBundleId: 'com.handybuddy.app',
+    apiKey: 'AIzaSyAK5fnMO1Ie3ziUv9s_YTKOLV6HmBz9bt0',
+    appId: '1:712509417680:ios:YOUR_IOS_APP_ID',
+    messagingSenderId: '712509417680',
+    projectId: 'handybuddy-518c6',
+    storageBucket: 'handybuddy-518c6.firebasestorage.app',
+    iosClientId: 'YOUR_IOS_CLIENT_ID', // Not in your JSON file
+    iosBundleId: 'com.example.handybuddy',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_MACOS_API_KEY',
-    appId: 'YOUR_MACOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'handy-buddy-app',
-    storageBucket: 'handy-buddy-app.appspot.com',
-    iosClientId: 'YOUR_MACOS_CLIENT_ID',
-    iosBundleId: 'com.handybuddy.app',
+    apiKey: 'AIzaSyAK5fnMO1Ie3ziUv9s_YTKOLV6HmBz9bt0',
+    appId: '1:712509417680:macos:YOUR_MACOS_APP_ID',
+    messagingSenderId: '712509417680',
+    projectId: 'handybuddy-518c6',
+    storageBucket: 'handybuddy-518c6.firebasestorage.app',
+    iosClientId: 'YOUR_MACOS_CLIENT_ID', // Not in your JSON file
+    iosBundleId: 'com.example.handybuddy',
   );
 }

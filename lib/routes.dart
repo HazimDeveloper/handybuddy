@@ -1,11 +1,9 @@
-// routes.dart
+// lib/routes.dart
 import 'package:flutter/material.dart';
 import 'package:handy_buddy/screens/common/about_us_screen.dart';
 import 'package:handy_buddy/screens/common/contact_us_screen.dart';
 import 'package:handy_buddy/screens/common/language_settings_screen.dart';
 import 'package:handy_buddy/screens/common/settings_screen.dart';
-
-// Provider screens
 import 'package:handy_buddy/screens/provider/auth/login_screen.dart';
 import 'package:handy_buddy/screens/provider/auth/signup_screen.dart';
 import 'package:handy_buddy/screens/provider/auth/welcome_screen.dart';
@@ -14,13 +12,10 @@ import 'package:handy_buddy/screens/provider/bookings/bookings_screen.dart';
 import 'package:handy_buddy/screens/provider/earnings/earnings_screen.dart';
 import 'package:handy_buddy/screens/provider/home/manage_service_screen.dart';
 import 'package:handy_buddy/screens/provider/home/provider_home_screen.dart';
-import 'package:handy_buddy/screens/provider/profile/provider_profile_screen.dart';
-import 'package:handy_buddy/screens/provider/profile/edit_profile_screen.dart';
-import 'package:handy_buddy/screens/provider/profile/edit_profile_name_screen.dart';
 import 'package:handy_buddy/screens/provider/profile/change_password_screen.dart';
+import 'package:handy_buddy/screens/provider/profile/edit_profile_screen.dart';
+import 'package:handy_buddy/screens/provider/profile/provider_profile_screen.dart';
 import 'package:handy_buddy/screens/provider/provider_main_screen.dart';
-
-// Seeker screens
 import 'package:handy_buddy/screens/seeker/auth/login_screen.dart';
 import 'package:handy_buddy/screens/seeker/auth/signup_screen.dart';
 import 'package:handy_buddy/screens/seeker/booking/booking_screen.dart';
@@ -28,199 +23,275 @@ import 'package:handy_buddy/screens/seeker/booking/booking_confirmation_screen.d
 import 'package:handy_buddy/screens/seeker/booking/payment_screen.dart';
 import 'package:handy_buddy/screens/seeker/booking/rebook_screen.dart';
 import 'package:handy_buddy/screens/seeker/bookings/seeker_booking_screen.dart';
-import 'package:handy_buddy/screens/seeker/bookings/booking_detail_screen.dart';
 import 'package:handy_buddy/screens/seeker/chat/chat_screen.dart';
 import 'package:handy_buddy/screens/seeker/home/seeker_home_screen.dart';
 import 'package:handy_buddy/screens/seeker/profile/seeker_profile_screen.dart';
-import 'package:handy_buddy/screens/seeker/profile/edit_profile_screen.dart';
 import 'package:handy_buddy/screens/seeker/rate/rate_screen.dart';
 import 'package:handy_buddy/screens/seeker/seeker_main_screen.dart';
 import 'package:handy_buddy/screens/seeker/services/service_category_screen.dart';
 import 'package:handy_buddy/screens/seeker/services/service_detail_screen.dart';
-
-// Splash screen
 import 'package:handy_buddy/screens/splash_screen.dart';
 
 class Routes {
-  // Common routes
+  // Splash and welcome
   static const String splash = '/';
-  static const String settings = '/settings';
-  static const String languageSettings = '/settings/language';
-  static const String contactUs = '/contact-us';
-  static const String aboutUs = '/about-us';
-  
-  // Provider routes
   static const String providerWelcome = '/provider/welcome';
+  
+  // Provider auth routes
   static const String providerLogin = '/provider/login';
   static const String providerSignup = '/provider/signup';
-  static const String providerSignupDetails = '/provider/signup/details';
-  static const String providerMain = '/provider/main';
-  static const String providerHome = '/provider/home';
-  static const String providerBookings = '/provider/bookings';
-  static const String providerBookingDetail = '/provider/bookings/detail';
-  static const String providerEarnings = '/provider/earnings';
-  static const String providerProfile = '/provider/profile';
-  static const String providerEditProfile = '/provider/profile/edit';
-  static const String providerEditProfileName = '/provider/profile/edit/name';
-  static const String providerChangePassword = '/provider/profile/password';
-  static const String manageService = '/provider/services/manage';
-  static const String addService = '/provider/services/add';
-  static const String editService = '/provider/services/edit';
   
-  // Seeker routes
+  // Seeker auth routes
   static const String seekerLogin = '/seeker/login';
   static const String seekerSignup = '/seeker/signup';
+  
+  // Provider main screens
+  static const String providerMain = '/provider/main';
+  static const String providerHome = '/provider/home';
+  static const String providerProfile = '/provider/profile';
+  static const String providerBookings = '/provider/bookings';
+  static const String providerEarnings = '/provider/earnings';
+  
+  // Provider profile screens
+  static const String providerEditProfile = '/provider/profile/edit';
+  static const String providerEditName = '/provider/profile/edit/name';
+  static const String providerChangePassword = '/provider/profile/change_password';
+  
+  // Provider service management
+  static const String manageService = '/provider/service/manage';
+  static const String addService = '/provider/service/add';
+  static const String editService = '/provider/service/edit';
+  
+  // Provider booking screens
+  static const String providerBookingDetail = '/provider/booking/detail';
+  
+  // Seeker main screens
   static const String seekerMain = '/seeker/main';
   static const String seekerHome = '/seeker/home';
+  static const String seekerProfile = '/seeker/profile';
+  static const String seekerBookings = '/seeker/bookings';
+  
+  // Seeker profile screens
+  static const String seekerEditProfile = '/seeker/profile/edit';
+  static const String seekerChangePassword = '/seeker/profile/change_password';
+  
+  // Seeker service screens
   static const String serviceCategory = '/seeker/services/category';
   static const String serviceDetail = '/seeker/services/detail';
+  
+  // Seeker booking screens
   static const String booking = '/seeker/booking';
-  static const String bookingConfirmation = '/seeker/booking/confirmation';
-  static const String payment = '/seeker/booking/payment';
-  static const String seekerBookings = '/seeker/bookings';
-  static const String seekerBookingDetail = '/seeker/bookings/detail';
-  static const String rebook = '/seeker/booking/rebook';
+  static const String bookService = '/seeker/book';
+  static const String bookingConfirmation = '/seeker/book/confirm';
+  static const String payment = '/seeker/book/payment';
+  static const String rebook = '/seeker/book/rebook';
+  static const String seekerBookingDetail = '/seeker/booking/detail';
   static const String rateService = '/seeker/rate';
-  static const String chat = '/seeker/chat';
-  static const String seekerProfile = '/seeker/profile';
-  static const String seekerEditProfile = '/seeker/profile/edit';
-
-  // Define all app routes
-  static Map<String, WidgetBuilder> getRoutes() {
-    return {
-      // Common routes
-      splash: (context) => const SplashScreen(),
-      settings: (context) => const SettingsScreen(),
-      languageSettings: (context) => const LanguageSettingsScreen(),
-      contactUs: (context) => const ContactUsScreen(),
-      aboutUs: (context) => const AboutUsScreen(),
-      
-      // Provider routes
-      providerWelcome: (context) => const ProviderWelcomeScreen(),
-      providerLogin: (context) => const ProviderLoginScreen(),
-      providerSignup: (context) => const ProviderSignupScreen(),
-      providerMain: (context) => const ProviderMainScreen(),
-      providerBookingDetail: (context) => const ProviderBookingDetailScreen(),
-      providerEditProfile: (context) => const ProviderEditProfileScreen(),
-      providerEditProfileName: (context) => const EditProfileNameScreen(),
-      providerChangePassword: (context) => const ChangePasswordScreen(),
-      manageService: (context) => const ManageServiceScreen(),
-      
-      // Seeker routes
-      seekerLogin: (context) => const SeekerLoginScreen(),
-      seekerSignup: (context) => const SeekerSignupScreen(),
-      seekerMain: (context) => const SeekerMainScreen(),
-      serviceCategory: (context) => const ServiceCategoryScreen(),
-      serviceDetail: (context) => const ServiceDetailScreen(),
-      booking: (context) => const BookingScreen(),
-      bookingConfirmation: (context) => const BookingConfirmationScreen(),
-      payment: (context) => const PaymentScreen(),
-      seekerBookingDetail: (context) => const SeekerBookingDetailScreen(),
-      rebook: (context) => const RebookScreen(),
-      rateService: (context) => const RateScreen(),
-      chat: (context) => const ChatScreen(),
-      seekerEditProfile: (context) => const SeekerEditProfileScreen(),
-    };
+  static const String emergencyRequest = '/seeker/emergency-request';
+  
+  // Chat
+  static const String chat = '/chat';
+  
+  // Common screens
+  static const String settings = '/settings';
+  static const String languageSettings = '/settings/language';
+  static const String aboutUs = '/about';
+  static const String contactUs = '/contact';
+  
+  // For backward compatibility
+  static get providerEditProfileName => providerEditName;
+  
+  // Method to navigate to a route
+  static void navigateTo(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushNamed(context, routeName, arguments: arguments);
   }
-
-  // Handle route generation for dynamic routes or routes with parameters
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    // Extract route arguments
-    final args = settings.arguments;
-
-    switch (settings.name) {
-      // Dynamic routes with parameters
-      case providerBookingDetail:
-        final bookingId = args as String;
-        return MaterialPageRoute(
-          builder: (_) => ProviderBookingDetailScreen(bookingId: bookingId),
-        );
-        
-      case seekerBookingDetail:
-        final bookingId = args as String;
-        return MaterialPageRoute(
-          builder: (_) => SeekerBookingDetailScreen(bookingId: bookingId),
-        );
-        
-      case serviceCategory:
-        final category = args as String;
-        return MaterialPageRoute(
-          builder: (_) => ServiceCategoryScreen(category: category),
-        );
-        
-      case serviceDetail:
-        final serviceId = args as String;
-        return MaterialPageRoute(
-          builder: (_) => ServiceDetailScreen(serviceId: serviceId),
-        );
-        
-      case chat:
-        final Map<String, dynamic> chatArgs = args as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            otherUserId: chatArgs['otherUserId'],
-            chatId: chatArgs['chatId'],
-          ),
-        );
-        
-      case rateService:
-        final Map<String, dynamic> rateArgs = args as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => RateScreen(
-            bookingId: rateArgs['bookingId'],
-            providerId: rateArgs['providerId'],
-          ),
-        );
-        
-      case rebook:
-        final bookingId = args as String;
-        return MaterialPageRoute(
-          builder: (_) => RebookScreen(previousBookingId: bookingId),
-        );
-        
-      case editService:
-        final serviceId = args as String;
-        return MaterialPageRoute(
-          builder: (_) => ManageServiceScreen(serviceId: serviceId),
-        );
-        
-      // Default fallback for undefined routes
-      default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
-          ),
-        );
-    }
-  }
-
-  // Navigation helpers
-  static Future<T?> navigateTo<T>(BuildContext context, String routeName, {Object? arguments}) {
-    return Navigator.pushNamed<T>(context, routeName, arguments: arguments);
-  }
-
-  static Future<T?> navigateToReplacement<T>(BuildContext context, String routeName, {Object? arguments}) {
-    return Navigator.pushReplacementNamed<T, Object?>(context, routeName, arguments: arguments);
-  }
-
-  static Future<T?> navigateAndRemoveUntil<T>(BuildContext context, String routeName, {Object? arguments, String? untilRouteName}) {
-    return Navigator.pushNamedAndRemoveUntil<T>(
+  
+  // Method to navigate and remove previous routes
+  static void navigateAndRemoveUntil(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushNamedAndRemoveUntil(
       context, 
       routeName, 
-      untilRouteName == null 
-          ? (route) => false 
-          : ModalRoute.withName(untilRouteName),
-      arguments: arguments,
+      (Route<dynamic> route) => false,
+      arguments: arguments
     );
   }
   
-  static void pop<T>(BuildContext context, [T? result]) {
-    Navigator.pop<T>(context, result);
+  // Method to replace current route
+  static void navigateAndReplace(BuildContext context, String routeName, {Object? arguments}) {
+    Navigator.pushReplacementNamed(context, routeName, arguments: arguments);
   }
   
-  static bool canPop(BuildContext context) {
-    return Navigator.canPop(context);
+  // Method to go back
+  static void goBack(BuildContext context) {
+    Navigator.pop(context);
+  }
+  
+  // Define all routes for MaterialApp
+  static Map<String, WidgetBuilder> getRoutes() {
+    return {
+      // Splash and welcome
+      splash: (context) => const SplashScreen(),
+      providerWelcome: (context) => const ProviderWelcomeScreen(),
+      
+      // Provider auth routes
+      providerLogin: (context) => const ProviderLoginScreen(),
+      providerSignup: (context) => const ProviderSignupScreen(),
+      
+      // Seeker auth routes
+      seekerLogin: (context) => const SeekerLoginScreen(),
+      seekerSignup: (context) => const SeekerSignupScreen(),
+      
+      // Provider main screens
+      providerMain: (context) => const ProviderMainScreen(),
+      providerHome: (context) => const ProviderHomeScreen(),
+      providerProfile: (context) => const ProviderProfileScreen(),
+      providerBookings: (context) => const BookingsScreen(),
+      providerEarnings: (context) => const EarningsScreen(),
+      
+      // Provider profile screens
+      providerEditProfile: (context) => const EditProfileScreen(),
+      providerEditName: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Edit Profile Name')),
+        body: const Center(child: Text('Edit Profile Name Screen')),
+      ),
+      providerChangePassword: (context) => const ChangePasswordScreen(),
+      
+      // Provider service management
+      manageService: (context) => const ManageServiceScreen(),
+      addService: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Add Service')),
+        body: const Center(child: Text('Add Service Screen')),
+      ),
+      editService: (context) {
+        final String serviceId = ModalRoute.of(context)!.settings.arguments as String;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Edit Service')),
+          body: Center(child: Text('Edit Service: $serviceId')),
+        );
+      },
+      
+      // Provider booking screens
+      providerBookingDetail: (context) {
+        final String bookingId = ModalRoute.of(context)!.settings.arguments as String;
+        return ProviderBookingDetailScreen(bookingId: bookingId);
+      },
+      
+      // Seeker main screens
+      seekerMain: (context) => const SeekerMainScreen(),
+      seekerHome: (context) => const SeekerHomeScreen(),
+      seekerProfile: (context) => const SeekerProfileScreen(),
+      seekerBookings: (context) => const SeekerBookingScreen(),
+      
+      // Seeker profile screens
+      seekerEditProfile: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Edit Profile')),
+        body: const Center(child: Text('Edit Profile Screen')),
+      ),
+      seekerChangePassword: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Change Password')),
+        body: const Center(child: Text('Change Password Screen')),
+      ),
+      
+      // Seeker service screens
+      serviceCategory: (context) {
+        final Map<String, String> args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+        return ServiceCategoryScreen(
+          categoryId: args['categoryId'] ?? '',
+          categoryName: args['categoryName'] ?? '',
+        );
+      },
+      serviceDetail: (context) {
+        final String serviceId = ModalRoute.of(context)!.settings.arguments as String;
+        return ServiceDetailScreen(
+          serviceId: serviceId,
+        );
+      },
+      
+      // Seeker booking screens
+      booking: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Book a Service')),
+        body: const Center(child: Text('Booking Selection Screen')),
+      ),
+      bookService: (context) {
+        // Let's implement a placeholder for now
+        return Scaffold(
+          appBar: AppBar(title: const Text('Book Service')),
+          body: const Center(child: Text('Booking Screen')),
+        );
+      },
+      bookingConfirmation: (context) {
+        // Using a Scaffold as a placeholder for now
+        final String bookingId = ModalRoute.of(context)!.settings.arguments as String;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Booking Confirmation')),
+          body: Center(child: Text('Booking ID: $bookingId')),
+        );
+      },
+      payment: (context) {
+        final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return PaymentScreen(
+          amount: args['amount'],
+          bookingId: args['bookingId'],
+        );
+      },
+      rebook: (context) {
+        final String previousBookingId = ModalRoute.of(context)!.settings.arguments as String;
+        return RebookScreen(previousBookingId: previousBookingId);
+      },
+      // Seeker booking screens detail and rate
+      seekerBookingDetail: (context) {
+        final String bookingId = ModalRoute.of(context)!.settings.arguments as String;
+        // Use a more generic approach with a Scaffold until you can confirm the actual implementation
+        return Scaffold(
+          appBar: AppBar(title: const Text('Booking Details')),
+          body: Center(child: Text('Booking ID: $bookingId')),
+        );
+      },
+      rateService: (context) {
+        final Map<String, String> args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+        return RateScreen(
+          bookingId: args['bookingId'] ?? '', 
+          providerId: args['providerId'] ?? '',
+        );
+      },
+      emergencyRequest: (context) {
+        final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Emergency Service Request')),
+          body: Center(
+            child: Text('Emergency Request Screen: ${args != null ? 'Category: ${args['category']}' : 'No category specified'}'),
+          ),
+        );
+      },
+      
+      // Chat
+      chat: (context) {
+        final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return ChatScreen(
+          otherUserId: args['otherUserId'],
+          chatId: args['chatId'],
+        );
+      },
+      
+      // Common screens
+      settings: (context) => const SettingsScreen(),
+      languageSettings: (context) => const LanguageSettingsScreen(),
+      aboutUs: (context) => const AboutUsScreen(),
+      contactUs: (context) => const ContactUsScreen(),
+    };
+  }
+  
+  // onUnknownRoute handler for when a named route is not found
+  static Route<dynamic> onUnknownRoute(RouteSettings settings) {
+    return MaterialPageRoute(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Page Not Found'),
+        ),
+        body: Center(
+          child: Text('No route defined for ${settings.name}'),
+        ),
+      ),
+    );
   }
 }

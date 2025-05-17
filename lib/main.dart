@@ -1,42 +1,17 @@
-// main.dart
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-
-// Firebase configuration
-import 'firebase_options.dart';
-
-// App Providers
-import 'providers/auth_provider.dart';
-import 'providers/booking_provider.dart';
-import 'providers/service_provider.dart';
-
-// App Constants
-import 'constants/app_colors.dart';
-import 'constants/app_styles.dart';
-
-// Navigation
-import 'routes.dart';
+import 'package:handy_buddy/constants/app_colors.dart';
+import 'package:handy_buddy/constants/app_texts.dart';
+import 'package:handy_buddy/providers/auth_provider.dart';
+import 'package:handy_buddy/providers/booking_provider.dart';
+import 'package:handy_buddy/providers/service_provider.dart';
+import 'package:handy_buddy/routes.dart';
 
 void main() async {
-  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // Run the app
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -47,128 +22,174 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Providers for state management
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => BookingProvider(),
-        ),
-        ChangeNotifierProxyProvider<AuthProvider, ServiceProvider>(
-          create: (_) => ServiceProvider(),
-          update: (_, authProvider, serviceProvider) => 
-              serviceProvider!..update(authProvider.user),
-        ),
-        // Add more providers as needed
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => BookingProvider()),
+        ChangeNotifierProvider(create: (context) => ServiceProvider()),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, authProvider, _) {
-          return MaterialApp(
-            title: 'Handy Buddy',
-            theme: ThemeData(
-              primarySwatch: AppColors.primarySwatch,
-              scaffoldBackgroundColor: AppColors.background,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
+      child: MaterialApp(
+        title: AppTexts.appName,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: AppColors.primarySwatch,
+          scaffoldBackgroundColor: AppColors.background,
+          fontFamily: 'Poppins',
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColors.primary,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: IconThemeData(color: Colors.white),
+            titleTextStyle: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              elevatedButtonTheme: ElevatedButtonThemeData(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  textStyle: AppStyles.buttonTextStyle,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-              textTheme: Theme.of(context).textTheme.apply(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              textStyle: const TextStyle(
                 fontFamily: 'Poppins',
-                bodyColor: AppColors.textPrimary,
-                displayColor: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
-              colorScheme: ColorScheme.fromSwatch(
-                primarySwatch: AppColors.primarySwatch,
-              ).copyWith(
-                secondary: AppColors.secondary,
-                error: AppColors.error,
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              textStyle: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
-              inputDecorationTheme: AppStyles.inputDecoration,
             ),
-            // Set dark theme if needed
-            darkTheme: ThemeData(
-              brightness: Brightness.dark,
-              primarySwatch: AppColors.primarySwatch,
-              scaffoldBackgroundColor: const Color(0xFF121212),
-              // Add more dark theme settings as needed
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              textStyle: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            // Use system theme preference
-            themeMode: ThemeMode.system,
-            
-            // Localization
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('en', ''), // English
-              Locale('ms', ''), // Malay
-              Locale('zh', ''), // Chinese
-              Locale('ta', ''), // Tamil
-            ],
-            
-            // Routing configuration
-            initialRoute: Routes.splash,
-            routes: Routes.getRoutes(),
-            onGenerateRoute: Routes.generateRoute,
-            
-            // Disable debug banner
-            debugShowCheckedModeBanner: false,
-            
-            // Error handling for routing
-            onUnknownRoute: (settings) {
-              return MaterialPageRoute(
-                builder: (_) => Scaffold(
-                  body: Center(
-                    child: Text('No route defined for ${settings.name}'),
-                  ),
-                ),
-              );
-            },
-            
-            // Scroll behavior configuration
-            scrollBehavior: const MaterialScrollBehavior().copyWith(
-              physics: const BouncingScrollPhysics(),
-              overscroll: false,
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: AppColors.backgroundLight,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: AppColors.borderLight,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: AppColors.primary,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: AppColors.error,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: AppColors.error,
+                width: 2,
+              ),
+            ),
+            labelStyle: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+            errorStyle: TextStyle(
+              color: AppColors.error,
+              fontSize: 12,
+            ),
+          ),
+          textTheme: const TextTheme(
+            headlineLarge: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            titleMedium: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            bodyLarge: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: AppColors.textPrimary,
+            ),
+            bodySmall: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        initialRoute: Routes.splash,
+        routes: Routes.getRoutes(),
+        onUnknownRoute: Routes.onUnknownRoute,
+        builder: (context, child) {
+          // Apply system-wide font scaling
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+            child: child!,
           );
         },
       ),
-    );
-  }
-}
-
-// Used for UI debugging - wraps widgets with borders to visualize layout
-class DebugWidgetBorder extends StatelessWidget {
-  final Widget child;
-  final Color color;
-
-  const DebugWidgetBorder({
-    Key? key,
-    required this.child,
-    this.color = Colors.red,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: color, width: 1),
-      ),
-      child: child,
     );
   }
 }

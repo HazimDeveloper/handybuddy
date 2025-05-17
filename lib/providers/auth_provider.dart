@@ -41,6 +41,7 @@ class AuthProvider with ChangeNotifier {
     _initAuthState();
   }
   
+  
   // Initialize authentication state
   Future<void> _initAuthState() async {
     _setLoading(true);
